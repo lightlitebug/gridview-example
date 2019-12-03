@@ -49,6 +49,7 @@ class ImageDetail extends StatelessWidget {
                     'Size: ${photo.webformatWidth} x ${photo.webformatHeight}',
                     style: TextStyle(fontSize: 16),
                   ),
+                  photo.viewed ? Text('Viewed') : Container(),
                 ],
               ),
             ),

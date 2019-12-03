@@ -9,8 +9,8 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: PixabayPhotos(),
+    return ChangeNotifierProvider(
+      builder: (_) => PixabayPhotos(),
       child: MaterialApp(
         title: 'GridView Demo',
         theme: ThemeData(
@@ -33,11 +33,12 @@ class _MyHomePageState extends State<MyHomePage> {
   // bool _isInit = true;
   int page = 1;
   List<PixabayPhotoItem> photos = [];
+  var pixabayProvider;
 
   @override
   void initState() {
     Future.delayed(Duration.zero).then((_) async {
-      final pixabayProvider = Provider.of<PixabayPhotos>(context);
+      pixabayProvider = Provider.of<PixabayPhotos>(context);
       await pixabayProvider.getPixabayPhotos(page, 20);
       photos = pixabayProvider.photos;
     }).catchError((error) {
@@ -88,46 +89,52 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text('GridView Demo'),
       ),
       body: SafeArea(
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: orientation == Orientation.portrait ? 2 : 3,
-            childAspectRatio: 3 / 2,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-          ),
-          itemCount: photos.length,
-          itemBuilder: (context, index) {
-            return InkWell(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (ctx) {
-                    return ImageDetail(photos[index]);
-                  }),
-                );
-              },
-              child: GridTile(
-                child: FadeInImage(
-                  placeholder: AssetImage('assets/images/placeholder.png'),
-                  image: NetworkImage(photos[index].webformatURL),
-                  fit: BoxFit.cover,
+        child: pixabayProvider == null
+            ? Center(child: CircularProgressIndicator())
+            : GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: orientation == Orientation.portrait ? 2 : 3,
+                  childAspectRatio: 3 / 2,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
                 ),
-                footer: GridTileBar(
-                  backgroundColor: Colors.black54,
-                  title: Text(photos[index].user),
-                  subtitle: Text(
-                    'views: ${photos[index].views}, favs: ${photos[index].favorites}',
-                  ),
-                ),
+                itemCount: photos.length,
+                itemBuilder: (context, index) {
+                  return InkWell(
+                    onTap: () {
+                      pixabayProvider.toggleView(photos[index].id);
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (ctx) {
+                          return ImageDetail(photos[index]);
+                        }),
+                      );
+                    },
+                    child: GridTile(
+                      child: FadeInImage(
+                        placeholder:
+                            AssetImage('assets/images/placeholder.png'),
+                        image: NetworkImage(photos[index].webformatURL),
+                        fit: BoxFit.cover,
+                      ),
+                      footer: GridTileBar(
+                        backgroundColor: photos[index].viewed
+                            ? Colors.blue[300]
+                            : Colors.black54,
+                        title: Text(photos[index].user),
+                        subtitle: Text(
+                          'views: ${photos[index].views}, favs: ${photos[index].favorites}',
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           page++;
 
-          final pixabayProvider = Provider.of<PixabayPhotos>(context);
+          pixabayProvider = Provider.of<PixabayPhotos>(context);
           await pixabayProvider.getPixabayPhotos(page, 20);
           photos = pixabayProvider.photos;
         },

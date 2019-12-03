@@ -15,6 +15,7 @@ class PixabayPhotoItem {
   final int webformatHeight;
   final int webformatWidth;
   final String webformatURL;
+  bool viewed;
 
   PixabayPhotoItem({
     this.id,
@@ -25,6 +26,7 @@ class PixabayPhotoItem {
     this.webformatHeight,
     this.webformatWidth,
     this.webformatURL,
+    this.viewed = false,
   });
 
   PixabayPhotoItem.fromJson(json)
@@ -35,7 +37,8 @@ class PixabayPhotoItem {
         this.favorites = json['favorites'],
         this.webformatHeight = json['webformatHeight'],
         this.webformatWidth = json['webformatWidth'],
-        this.webformatURL = json['webformatURL'];
+        this.webformatURL = json['webformatURL'],
+        this.viewed = false;
 }
 
 class PixabayPhotos with ChangeNotifier {
@@ -62,5 +65,16 @@ class PixabayPhotos with ChangeNotifier {
       print(error);
       throw error;
     }
+  }
+
+  void toggleView(int id) {
+    _photos.map((photo) {
+      if (photo.id == id) {
+        photo.viewed = !photo.viewed;
+      }
+      return photo;
+    }).toList();
+
+    notifyListeners();
   }
 }
